@@ -35,6 +35,7 @@ class MetaClassificationDB extends Migration  {
             $table->integer('classification_id')->unsigned()->index()->nullable();
             $table->tinyInteger('required')->default(0);
             $table->float('version')->default(1);
+            $table->integer('position')->default(0)->nullable();
             $table->timestamps();
 
             $table->softDeletes();
