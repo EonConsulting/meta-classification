@@ -28,7 +28,7 @@ class Classifications {
     }
 
     function classified_classifications() {
-        $classifications = MetaClassification::orderBy('id')->get()->keyBy('classification');
+        $classifications = MetaClassification::get()->keyBy('classification');
         return $classifications;
     }
 

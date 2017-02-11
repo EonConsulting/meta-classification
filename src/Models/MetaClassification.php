@@ -16,7 +16,7 @@ class MetaClassification extends Model {
     protected $table = 'meta_classifications';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'name', 'slug', 'classification'
+        'name', 'slug', 'classification', 'icon'
     ];
 
 }

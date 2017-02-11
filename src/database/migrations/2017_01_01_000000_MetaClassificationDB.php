@@ -21,6 +21,7 @@ class MetaClassificationDB extends Migration  {
             $table->string('name');
             $table->string('slug');
             $table->string('classification');
+            $table->longText('icon')->nullable();
             $table->timestamps();
 
             $table->softDeletes();
@@ -36,6 +37,7 @@ class MetaClassificationDB extends Migration  {
             $table->tinyInteger('required')->default(0);
             $table->float('version')->default(1);
             $table->integer('position')->default(0)->nullable();
+            $table->longText('icon')->nullable();
             $table->timestamps();
 
             $table->softDeletes();

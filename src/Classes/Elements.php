@@ -23,47 +23,118 @@ class Elements {
     public function get_elements() {
         $elements = MetaElement::whereIn('classification_id', $this->classification_ids)->get()->keyBy('id');
         $this->elements = $elements->toArray();
+
         return $this->build_hierarchy($elements->toArray());
     }
 
-    function build_hierarchy($elements = []) {
+    public function get_in_classifieds() {
+        $elements = MetaElement::whereIn('classification_id', $this->classification_ids)->get()->keyBy('id');
+        $this->elements = $elements->toArray();
 
-        $tree = (array)$this->insert(json_encode($elements));
+        $tree = $this->build_hierarchy($elements->toArray());
 
-        dd($tree);
-
-        return $tree;
-    }
-
-    function tree($data = []) {
-
-        if(is_array($data)) {
-            foreach($data as $item) {
-                if (!array_key_exists('children', $item)) {
-                    $item['children'] = [];
+        $data = [];
+        foreach($tree as $branch) {
+            if(array_key_exists('classification_id', $branch)) {
+                if(!array_key_exists($branch['classification_id'], $data)) {
+                    $data[$branch['classification_id']] = [];
                 }
 
-                if(array_key_exists('parent_id', $item)) {
-                    if($item['parent_id'] == null) {
-//                        dd($item);
-                    } else if (array_key_exists($item['parent_id'], $data)) {
-                        if(array_key_exists('children', $data[$item['parent_id']])) {
-                            $data[$item['parent_id']]['children'] = [];
-                        }
-                        $data[$item['parent_id']]['children'][$item['id']] = $item;
-                        unset($data[$item['id']]);
-                    } else {
-//                        $this->insert($data, $item, $item['parent_id'], $item['id']);
-                    }
-                }
+                $data[$branch['classification_id']][] = $branch;
             }
         }
 
         return $data;
     }
 
-    function insert($raw) {
+    function get_elements_for_icons() {
+        $elements = MetaElement::whereIn('classification_id', $this->classification_ids)->get()->keyBy('id');
+        $this->elements = $elements->toArray();
+        $arr = $elements->toArray();
+        $data = $this->flatten($arr, '.');
 
+        dd($data);
+
+        return $data;
+    }
+
+    function flatten($array, $keySeparator = '.') {
+        if( is_array( $array ) ) {
+            foreach( $array as $name => $value ) {
+                $f = $this->flatten( $value , $keySeparator);
+                if( is_array( $f ) ) {
+                    if(array_key_exists('parent_id', $f)) {
+                        foreach( $f as $key => $val ) {
+                            unset($array[ $name ]);
+                            if($this->check_contains_key($f['parent_id'], $array)) {
+                                $before = $this->get_contains_key($f['parent_id'], $array) . $keySeparator;
+                            } else {
+                                $before = ($f['parent_id'] != null && $f['parent_id'] != '') ? $f['parent_id'] . $keySeparator : '';
+                            }
+
+                            $array[ $before . $name] = $value;
+                        }
+                    }
+                }
+            }
+        }
+        return $array;
+    }
+
+//    function flatten(&$array, $prefix = '') {
+//        $result = array();
+//        while(count($array) > 0) {
+//            foreach ($array as $key => $value) {
+//                if (is_array($value)) {
+//                    if (array_key_exists('parent_id', $value) && !$value['parent_id']) {
+//                        $result[$value['id'] . '.'] = $value;
+//                        unset($array[$key]);
+//                    } else if (array_key_exists('parent_id', $value) && $value['parent_id'] && $this->check_contains_key($value['parent_id'], $result)) {
+//                        $k = $this->get_contains_key($value['parent_id'], $result);
+//                        $result[$k . '-' . $value['id'] . '.'] = $value;
+//                        unset($array[$key]);
+//                        echo '<pre>';
+//                        print_r($value['id']);
+//                        echo '</pre>';
+//                        $result = $result + $this->flatten($array, $k . '-' . $value['id'] . '.');
+//                    } else {
+////                        dd($value);
+//                    }
+//                }
+//            }
+//        }
+//        return $result;
+//    }
+
+    function check_contains_key($parent_id, $arr) {
+
+        foreach($arr as $key => $value) {
+            if($key == $parent_id || strpos($key, '.' . $parent_id . '.') != false || strpos($key, '-' . $parent_id . '.') != false ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function get_contains_key($parent_id, $arr) {
+
+        foreach($arr as $key => $value) {
+            if($key == $parent_id || strpos($key, '.' . $parent_id . '.') != false || strpos($key, '-' . $parent_id . '.') != false ) {
+                return $key;
+            }
+        }
+
+        return false;
+    }
+
+    function build_hierarchy($elements = []) {
+        $tree = (array)$this->tree(json_encode($elements));
+
+        return $tree;
+    }
+
+    function tree($raw) {
         $raw= json_decode($raw, true);
 
         $nested = [];
@@ -83,65 +154,5 @@ class Elements {
 
         return $nested;
     }
-
-//    function insert(&$data, $item, $parent_id, $id, $test = false) {
-//
-//        if($test)
-//            dd($data);
-//
-//        if(array_key_exists($parent_id, $data)) {
-//            if(!array_key_exists('children', $data[$parent_id])) {
-//                $data[$parent_id]['children'] = [];
-//            }
-//            $data[$parent_id]['children'][$id] = $item;
-//            unset($data[$parent_id]['children'][$id]);
-//            return;
-//        }
-//
-//        foreach($data as $key => $value) {
-//            if(array_key_exists($parent_id, $value)) {
-//                if(!array_key_exists('children', $value[$parent_id])) {
-//                    $value[$parent_id]['children'] = [];
-//                }
-//                $value[$parent_id]['children'][$id] = $item;
-//                unset($data[$key][$parent_id]['children'][$id]);
-//                return;
-//            }
-//            if(array_key_exists('children', $value)) {
-//                $this->insert($value['children'], $item, $parent_id, $id, true);
-//            }
-//        }
-//    }
-
-//    function tree($data = [], $tree = [], $temp_item = [], $parent = false) {
-//        if(is_array($data) && count($data) > 0) {
-//            foreach($data as $item) {
-//                if(!$item['parent_id']) {
-//                    $tree[$item['id']] = $item;
-//                    $tree[$item['id']]['children'] = [];
-//                } else {
-//                    if(array_key_exists($item['parent_id'], $data)) {
-//                        if(!array_key_exists('children', $tree[$item['parent_id']]))
-//                            $tree[$item['parent_id']]['children'] = [];
-//
-//                        $tree[$item['parent_id']]['children'][] = $item;
-//                        unset($data[$item['id']]);
-//                    } else {
-////                        $this->tree($data, $tree, $item, $item['parent_id']);
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    function get_children($parent_id) {
-//        $children = [];
-//        foreach($this->elements as $item) {
-//            if(is_array($item) && array_key_exists('parent_id', $item) && $item['parent_id'] == $parent_id) {
-//                $children[] = $item;
-//            }
-//        }
-//        return $children;
-//    }
 
 }

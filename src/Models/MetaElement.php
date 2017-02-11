@@ -16,7 +16,7 @@ class MetaElement extends Model {
     protected $table = 'meta_elements';
     protected $primaryKey = 'id';
     protected $fillable = [
-        'name', 'description', 'slug', 'parent_id', 'classification_id', 'required', 'version', 'position'
+        'name', 'description', 'slug', 'parent_id', 'classification_id', 'required', 'version', 'position', 'icon'
     ];
 
 }

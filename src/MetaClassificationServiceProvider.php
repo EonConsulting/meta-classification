@@ -20,6 +20,11 @@ class MetaClassificationServiceProvider extends ServiceProvider {
 
     public function boot() {
         $this->publishMigrations();
+        $this->routes();
+        $this->views();
+        $this->publishes([
+            __DIR__.'/assets' => public_path('vendor/meta'),
+        ], 'public');
     }
 
     private function publishMigrations() {
@@ -29,6 +34,14 @@ class MetaClassificationServiceProvider extends ServiceProvider {
 
     private function getMigrationsPath() {
         return __DIR__ . '/database/migrations/';
+    }
+
+    public function routes() {
+        $this->loadRoutesFrom(__DIR__.'/Routes/web.php');
+    }
+
+    public function views() {
+        $this->loadViewsFrom(__DIR__.'/resources/views', 'eon.meta');
     }
 
 }
